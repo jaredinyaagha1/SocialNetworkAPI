@@ -1,51 +1,24 @@
 const { timeStamp } = require('console');
 const { Schema, model } = require('mongoose');
 
-// const reactionsSchema = new Schema(
-//     {
-//         reactionId: {
-//             type: Schema.Types.ObjectId,
-//             default: () => new Types.ObjectId(),
-//         },
-//         reactionBody: {
-//             type: String,
-//             required: true,
-//             maxlength: 50,
-//             minlength: 4,
-//             default: 'Unnamed reaction',
-//         },
-//         username: {
-//             type: String,
-//             required: true,
-//         },
-//         createdAt: {
-//             type: Date,
-//             default: Date.now().toString(),
-//             get: formatTime,
-//         },
-//     }
-
-// )
-// Schema to create Student model
 const thoughtsSchema = new Schema(
     {
         thoughtText: {
             type: String,
             required: true,
-            max_length: 50,
+            max_length: 240,
             trim: true
         },
         createdAt: {
-            type: String,
-            unique: true,
-            required: true,
-            match: /.+\@.+\..+/,
+            type: Date,
+            default: Date.now,
+            get: timeSetter,
         },
         username: {
             type: String,
             required: true
         },
-        reactions: [reactionsSchema],
+        reactions: [reaction],
     },
     {
         toJSON: {
@@ -55,6 +28,20 @@ const thoughtsSchema = new Schema(
         id: false,
     }
 );
+
+function timeSetter(time) {
+    let created = new Date(time)
+    let formatted = created.toLocaleString("en-US")
+    return formatted
+}
+
+thoughtSchema
+    .virtual('reactionCount')
+    .get(function () {
+        return this.reactions.length;
+    })
+
+
 
 const User = model('User', userSchema);
 

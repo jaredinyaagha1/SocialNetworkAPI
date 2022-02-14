@@ -20,7 +20,7 @@ const reactionsSchema = new Schema(
         createdAt: {
             type: Date,
             default: Date.now().toString(),
-            get: formatTime,
+            get: timeSetter,
         },
     },
     {
@@ -31,5 +31,11 @@ const reactionsSchema = new Schema(
     }
 
 );
+
+function timeSetter(time) {
+    let created = new Date(time)
+    let formatted = created.toLocaleString("en-US")
+    return formatted
+}
 
 module.exports = reactionsSchema;
