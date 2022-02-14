@@ -31,7 +31,7 @@ module.exports = {
       .select('-__v')
       .then((thought) =>
         !thought
-          ? res.status(404).json({ message: 'No thought with that ID' })
+          ? res.status(404).json({ message: 'No thought with this ID' })
           : res.json({ thought })
       )
       .catch((err) => {
@@ -39,10 +39,36 @@ module.exports = {
         return res.status(500).json(err);
       });
   },
-  // create a new thought
-  createthought(req, res) {
-    thought.create(req.body)
-      .then((thought) => res.json(thought))
+  createThought(req, res) {
+    Thought.create(req.body)
+      .then(function (thought) {
+        if (thought) {
+          User.findOneAndUpdate(
+            { username: req.body.username },
+            { $addToSet: { thoughts: thought._id } },
+            { runValidators: true, new: true }
+          )
+            .then((user) =>
+              !user
+                ? res.status(404).json({ message: 'No user with this username!' })
+                : res.json(thought)
+            )
+            .catch((err) => res.status(500).json(err));
+        }
+      })
+      .catch((err) => res.status(500).json(err));
+  },
+  updateThought(req, res) {
+    Thought.findOneAndUpdate(
+      { _id: req.params.thoughtId },
+      { $set: req.body },
+      { runValidators: true, new: true }
+    )
+      .then((thought) =>
+        !thought
+          ? res.status(404).json({ message: 'No thought with this ID' })
+          : res.json(thought)
+      )
       .catch((err) => res.status(500).json(err));
   },
   // Delete a thought and remove them from the course
@@ -57,12 +83,8 @@ module.exports = {
             { new: true }
           )
       )
-      .then((course) =>
-        !course
-          ? res.status(404).json({
-            message: 'thought deleted, but no courses found',
-          })
-          : res.json({ message: 'thought successfully deleted' })
+      .then(
+        res.josn({ message: 'Thought has been deleted!' })
       )
       .catch((err) => {
         console.log(err);
@@ -70,9 +92,9 @@ module.exports = {
       });
   },
 
-  // Add an assignment to a thought
-  addAssignment(req, res) {
-    console.log('You are adding an assignment');
+  // Add a reaction to a thought
+  addReaction(req, res) {
+    console.log('You are adding a reaction to a thought');
     console.log(req.body);
     thought.findOneAndUpdate(
       { _id: req.params.thoughtId },
@@ -88,11 +110,11 @@ module.exports = {
       )
       .catch((err) => res.status(500).json(err));
   },
-  // Remove assignment from a thought
-  removeAssignment(req, res) {
+  // Remove reaction from a thought
+  removeReaction(req, res) {
     thought.findOneAndUpdate(
       { _id: req.params.thoughtId },
-      { $pull: { assignment: { assignmentId: req.params.assignmentId } } },
+      { $pull: { reaction: { reactionId: req.params.reactionId } } },
       { runValidators: true, new: true }
     )
       .then((thought) =>
